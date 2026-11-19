@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDFAman — Alat PDF &amp; QR yang aman, diproses di perangkatmu</title>
+  <meta name="description" content="Gabung, pisah, konversi, dan tanda tangani PDF, serta buat QR code — semua diproses di browser, file tidak pernah diupload.">
+  <meta name="theme-color" content="#4338ca">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Great+Vibes&family=Satisfy&display=swap">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="sidebar">
+  <div class="sidebar-inner">
+    <a href="#home" class="brand">
+      <img src="assets/img/favicon.svg" alt="" width="28" height="28">
+      <span>PDF<b>Aman</b></span>
+    </a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+    <nav class="nav" id="nav">
+      <span class="nav-label">Menu</span>
+      <a href="#home" data-nav="home"><span class="nav-ico">⌂</span>Beranda</a>
+      <a href="#merge" data-nav="merge"><span class="nav-ico">⧉</span>Gabung PDF</a>
+      <a href="#split" data-nav="split"><span class="nav-ico">✂</span>Pisah PDF</a>
+      <a href="#pdf2img" data-nav="pdf2img"><span class="nav-ico">🖼</span>PDF ke JPG/PNG</a>
+      <a href="#sign" data-nav="sign"><span class="nav-ico">✍</span>Tanda Tangan</a>
+      <a href="#qr" data-nav="qr"><span class="nav-ico">▦</span>QR Code</a>
+      <p class="nav-note">🔒 Semua file diproses di perangkatmu.</p>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ================= HOME ================= -->
+  <section id="view-home" class="view">
+    <div class="hero">
+      <span class="badge">🔒 100% diproses di perangkatmu</span>
+      <h1>Semua alat PDF yang kamu butuhkan,<br>tanpa upload ke server.</h1>
+      <p>File kamu tidak pernah meninggalkan browser. Tidak ada server, tidak ada penyimpanan, tidak ada yang bisa membaca dokumenmu.</p>
+    </div>
+    <div class="tool-grid">
+      <a class="tool-card" href="#merge">
+        <span class="tool-icon c1">⧉</span>
+        <h3>Gabung PDF</h3><p>Satukan beberapa PDF jadi satu file, atur urutannya sesukamu.</p>
+      </a>
+      <a class="tool-card" href="#split">
+        <span class="tool-icon c2">✂</span>
+        <h3>Pisah PDF</h3><p>Pisah per halaman, per rentang, atau ambil halaman tertentu saja.</p>
+      </a>
+      <a class="tool-card" href="#pdf2img">
+        <span class="tool-icon c3">🖼</span>
+        <h3>PDF ke JPG/PNG</h3><p>Ubah setiap halaman PDF menjadi gambar berkualitas tinggi.</p>
+      </a>
+      <a class="tool-card" href="#sign">
+        <span class="tool-icon c4">✍</span>
+        <h3>Tanda Tangan PDF</h3><p>Gambar, ketik, atau unggah tanda tangan lalu tempel di dokumen.</p>
+      </a>
+      <a class="tool-card" href="#qr">
+        <span class="tool-icon c5">▦</span>
+        <h3>Buat QR Code</h3><p>QR dari link, bisa custom warna, gaya, dan logo di tengahnya.</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= MERGE ================= -->
+  <section id="view-merge" class="view" hidden>
+    <div class="tool-head">
+      <h1>Gabung PDF</h1>
+      <p>Pilih beberapa file PDF, seret untuk mengatur urutan, lalu gabungkan.</p>
+    </div>
+    <div class="dropzone" id="merge-drop" role="button" tabindex="0">
+      <input type="file" id="merge-input" accept="application/pdf,.pdf" multiple hidden>
+      <div class="dz-icon">📄</div>
+      <strong>Pilih file PDF</strong>
+      <span>atau seret &amp; lepas di sini (bisa banyak sekaligus)</span>
+    </div>
+    <div class="panel" id="merge-panel" hidden>
+      <div class="panel-head">
+        <strong id="merge-summary"></strong>
+        <span class="muted">Seret ⋮⋮ untuk mengubah urutan</span>
+      </div>
+      <ul class="file-list" id="merge-list"></ul>
+      <div class="actions">
+        <button class="btn ghost" id="merge-add" type="button">+ Tambah file</button>
+        <button class="btn ghost" id="merge-clear" type="button">Hapus semua</button>
+        <span class="spacer"></span>
+        <button class="btn primary" id="merge-run" type="button">Gabungkan PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SPLIT ================= -->
+  <section id="view-split" class="view" hidden>
+    <div class="tool-head">
+      <h1>Pisah PDF</h1>
+      <p>Pisahkan halaman PDF menjadi beberapa file, atau ambil halaman yang kamu perlukan saja.</p>
+    </div>
+    <div class="dropzone" id="split-drop" role="button" tabindex="0">
+      <input type="file" id="split-input" accept="application/pdf,.pdf" hidden>
+      <div class="dz-icon">📄</div>
+      <strong>Pilih file PDF</strong>
+      <span>atau seret &amp; lepas di sini</span>
+    </div>
+    <div class="panel" id="split-panel" hidden>
+      <div class="panel-head">
+        <strong id="split-info"></strong>
+        <button class="btn ghost sm" id="split-reset" type="button">Ganti file</button>
+      </div>
+
+      <div class="mode-grid" role="radiogroup">
+        <label class="mode-card"><input type="radio" name="split-mode" value="every" checked>
+          <span><b>Setiap halaman</b><small>Tiap halaman jadi 1 file (ZIP)</small></span></label>
+        <label class="mode-card"><input type="radio" name="split-mode" value="fixed">
+          <span><b>Setiap N halaman</b><small>Mis. per 2 halaman</small></span></label>
+        <label class="mode-card"><input type="radio" name="split-mode" value="ranges">
+          <span><b>Per rentang</b><small>Mis. 1-3, 4-8 → 2 file</small></span></label>
+        <label class="mode-card"><input type="radio" name="split-mode" value="select">
+          <span><b>Ambil halaman</b><small>Halaman terpilih → 1 file</small></span></label>
+      </div>
+
+      <div class="field" id="split-fixed-field" hidden>
+        <label for="split-fixed">Jumlah halaman per file</label>
+        <input type="number" id="split-fixed" min="1" value="2">
+      </div>
+      <div class="field" id="split-range-field" hidden>
+        <label for="split-range" id="split-range-label">Rentang halaman</label>
+        <input type="text" id="split-range" placeholder="contoh: 1-3, 5, 8-10" autocomplete="off">
+        <small class="muted" id="split-range-hint">Pisahkan dengan koma. Di mode "Ambil halaman" kamu juga bisa klik thumbnail di bawah.</small>
+      </div>
+
+      <div class="grid-tools">
+        <span class="muted">Klik halaman untuk memilih</span>
+        <span class="spacer"></span>
+        <button class="btn ghost sm" id="split-all" type="button">Pilih semua</button>
+        <button class="btn ghost sm" id="split-none" type="button">Kosongkan</button>
+      </div>
+      <div class="page-grid" id="split-grid"></div>
+
+      <div class="actions sticky">
+        <span class="spacer"></span>
+        <button class="btn primary" id="split-run" type="button">Pisah PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PDF -> IMAGE ================= -->
+  <section id="view-pdf2img" class="view" hidden>
+    <div class="tool-head">
+      <h1>PDF ke JPG / PNG</h1>
+      <p>Ubah halaman PDF menjadi gambar. Pilih format dan kualitasnya.</p>
+    </div>
+    <div class="dropzone" id="img-drop" role="button" tabindex="0">
+      <input type="file" id="img-input" accept="application/pdf,.pdf" hidden>
+      <div class="dz-icon">🖼</div>
+      <strong>Pilih file PDF</strong>
+      <span>atau seret &amp; lepas di sini</span>
+    </div>
+    <div class="panel" id="img-panel" hidden>
+      <div class="panel-head">
+        <strong id="img-info"></strong>
+        <button class="btn ghost sm" id="img-reset" type="button">Ganti file</button>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="img-format">Format</label>
+          <select id="img-format">
+            <option value="png">PNG (tajam, tanpa kompresi)</option>
+            <option value="jpg">JPG (ukuran lebih kecil)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="img-scale">Resolusi</label>
+          <select id="img-scale">
+            <option value="1">Rendah (72 DPI)</option>
+            <option value="2" selected>Sedang (144 DPI)</option>
+            <option value="3">Tinggi (216 DPI)</option>
+            <option value="4">Sangat tinggi (288 DPI)</option>
+          </select>
+        </div>
+        <div class="field" id="img-quality-field" hidden>
+          <label for="img-quality">Kualitas JPG: <span id="img-quality-val">90</span>%</label>
+          <input type="range" id="img-quality" min="50" max="100" value="90">
+        </div>
+        <div class="field">
+          <label for="img-pages">Halaman (kosong = semua)</label>
+          <input type="text" id="img-pages" placeholder="contoh: 1-3, 5" autocomplete="off">
+        </div>
+      </div>
+      <div class="actions">
+        <span class="spacer"></span>
+        <button class="btn primary" id="img-run" type="button">Konversi</button>
+      </div>
+      <div id="img-results-wrap" hidden>
+        <div class="panel-head">
+          <strong id="img-results-info"></strong>
+          <button class="btn primary sm" id="img-zip" type="button">⬇ Unduh semua (ZIP)</button>
+        </div>
+        <div class="result-grid" id="img-results"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SIGN ================= -->
+  <section id="view-sign" class="view" hidden>
+    <div class="tool-head">
+      <h1>Tanda Tangan PDF</h1>
+      <p>Buat tanda tangan, lalu klik di halaman untuk menempelkannya. Geser untuk memindah, tarik sudut untuk mengubah ukuran.</p>
+    </div>
+    <div class="dropzone" id="sign-drop" role="button" tabindex="0">
+      <input type="file" id="sign-input" accept="application/pdf,.pdf" hidden>
+      <div class="dz-icon">✍</div>
+      <strong>Pilih file PDF</strong>
+      <span>atau seret &amp; lepas di sini</span>
+    </div>
+    <div class="sign-layout" id="sign-panel" hidden>
+      <aside class="sign-side panel">
+        <h3>Tanda tangan saya</h3>
+        <div class="sig-list" id="sig-list"><p class="muted small">Belum ada. Buat dulu di bawah.</p></div>
+        <button class="btn primary block" id="sig-new" type="button">+ Buat tanda tangan</button>
+        <button class="btn ghost block" id="sig-date" type="button">+ Tanggal hari ini</button>
+        <hr>
+        <ol class="steps small">
+          <li>Pilih tanda tangan di atas (bergaris biru = aktif).</li>
+          <li>Klik di halaman untuk menempel.</li>
+          <li>Geser untuk memindah, tarik ◢ untuk ubah ukuran, ✕ untuk hapus.</li>
+          <li>Klik <b>Simpan PDF</b>.</li>
+        </ol>
+        <hr>
+        <p class="small muted" id="sign-info"></p>
+        <button class="btn primary block" id="sign-save" type="button">⬇ Simpan PDF</button>
+        <button class="btn ghost block" id="sign-reset" type="button">Ganti file</button>
+      </aside>
+      <div class="sign-pages" id="sign-pages"></div>
+    </div>
+
+    <dialog id="sig-modal" class="modal">
+      <form method="dialog" class="modal-box" id="sig-form">
+        <div class="modal-head">
+          <h3>Buat tanda tangan</h3>
+          <button class="icon-btn" value="cancel" aria-label="Tutup">✕</button>
+        </div>
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab active" data-tab="draw">Gambar</button>
+          <button type="button" class="tab" data-tab="type">Ketik</button>
+          <button type="button" class="tab" data-tab="upload">Unggah gambar</button>
+        </div>
+
+        <div class="pane" data-pane="draw">
+          <canvas id="sig-canvas" class="sig-canvas"></canvas>
+          <div class="pane-tools">
+            <span class="muted small">Tanda tangani di kotak di atas</span>
+            <span class="spacer"></span>
+            <label class="small">Tebal <input type="range" id="sig-thick" min="1" max="8" value="3"></label>
+            <button type="button" class="btn ghost sm" id="sig-clear">Hapus</button>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="type" hidden>
+          <input type="text" id="sig-text" placeholder="Ketik nama kamu" maxlength="60" autocomplete="off">
+          <div class="font-list" id="sig-fonts"></div>
+        </div>
+
+        <div class="pane" data-pane="upload" hidden>
+          <input type="file" id="sig-upload" accept="image/png,image/jpeg,image/webp">
+          <label class="check"><input type="checkbox" id="sig-removebg" checked> Hapus latar putih (jadikan transparan)</label>
+          <div class="upload-preview" id="sig-upload-preview"><span class="muted small">Pratinjau muncul di sini</span></div>
+        </div>
+
+        <div class="pane-tools colors">
+          <span class="small">Warna:</span>
+          <label class="swatch"><input type="radio" name="sig-color" value="#111827" checked><span style="background:#111827"></span></label>
+          <label class="swatch"><input type="radio" name="sig-color" value="#1d3fb8"><span style="background:#1d3fb8"></span></label>
+          <label class="swatch"><input type="radio" name="sig-color" value="#b91c1c"><span style="background:#b91c1c"></span></label>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn ghost" value="cancel">Batal</button>
+          <button class="btn primary" type="button" id="sig-save-btn">Simpan &amp; gunakan</button>
+        </div>
+      </form>
+    </dialog>
+  </section>
+
+  <!-- ================= QR ================= -->
+  <section id="view-qr" class="view" hidden>
+    <div class="tool-head">
+      <h1>Buat QR Code</h1>
+      <p>Tempel link, atur tampilannya, tambahkan logo bila perlu, lalu unduh.</p>
+    </div>
+    <div class="qr-layout">
+      <div class="panel">
+        <div class="field">
+          <label for="qr-data">Link atau teks</label>
+          <input type="text" id="qr-data" placeholder="https://contoh.com" value="https://" autocomplete="off">
+          <small class="muted" id="qr-data-hint"></small>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="qr-dot">Gaya titik</label>
+            <select id="qr-dot">
+              <option value="square">Kotak</option>
+              <option value="rounded" selected>Membulat</option>
+              <option value="extra-rounded">Sangat bulat</option>
+              <option value="dots">Titik</option>
+              <option value="classy">Classy</option>
+              <option value="classy-rounded">Classy bulat</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="qr-corner">Gaya sudut</label>
+            <select id="qr-corner">
+              <option value="square">Kotak</option>
+              <option value="extra-rounded" selected>Membulat</option>
+              <option value="dot">Bulat</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="qr-fg">Warna QR</label>
+            <input type="color" id="qr-fg" value="#111827">
+          </div>
+          <div class="field">
+            <label for="qr-corner-color">Warna sudut</label>
+            <input type="color" id="qr-corner-color" value="#4338ca">
+          </div>
+          <div class="field">
+            <label for="qr-bg">Warna latar</label>
+            <input type="color" id="qr-bg" value="#ffffff">
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="qr-transparent"> Latar transparan (PNG/SVG)</label>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="qr-size">Ukuran unduhan: <span id="qr-size-val">1024</span> px</label>
+            <input type="range" id="qr-size" min="256" max="2048" step="64" value="1024">
+          </div>
+          <div class="field">
+            <label for="qr-margin">Margin: <span id="qr-margin-val">16</span> px</label>
+            <input type="range" id="qr-margin" min="0" max="80" value="16">
+          </div>
+        </div>
+
+        <hr>
+        <label class="check strong"><input type="checkbox" id="qr-logo-on"> Tambahkan logo di tengah</label>
+        <div id="qr-logo-fields" hidden>
+          <div class="form-row">
+            <div class="field">
+              <label for="qr-logo">File logo (PNG/JPG/SVG)</label>
+              <input type="file" id="qr-logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+            </div>
+            <div class="field">
+              <label for="qr-logo-size">Ukuran logo: <span id="qr-logo-size-val">30</span>%</label>
+              <input type="range" id="qr-logo-size" min="15" max="45" value="30">
+            </div>
+          </div>
+        </div>
+        <p class="warn small" id="qr-warn" hidden></p>
+      </div>
+
+      <div class="panel qr-preview-panel">
+        <div class="qr-preview" id="qr-preview"></div>
+        <div class="field">
+          <label for="qr-name">Nama file</label>
+          <input type="text" id="qr-name" value="qrcode" autocomplete="off">
+        </div>
+        <div class="actions wrap">
+          <button class="btn primary" data-ext="png" type="button">⬇ PNG</button>
+          <button class="btn ghost" data-ext="jpeg" type="button">⬇ JPG</button>
+          <button class="btn ghost" data-ext="svg" type="button">⬇ SVG</button>
+        </div>
+        <p class="small muted">Selalu tes scan QR dengan kamera HP sebelum dicetak, terutama jika memakai logo.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>🔒 PDFAman memproses semua file langsung di browser kamu. Tidak ada file yang dikirim ke server.</p>
+    <p class="muted small">© <span id="year"></span> PDFAman</p>
+  </div>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="loading" class="loading" hidden>
+  <div class="loading-box"><div class="spinner"></div><p id="loading-text">Memproses…</p></div>
+</div>
+
+<!-- Library (versi dikunci). Lihat README untuk opsi self-host. -->
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/merge.js"></script>
+<script src="assets/js/split.js"></script>
+<script src="assets/js/pdf2img.js"></script>
+<script src="assets/js/sign.js"></script>
+<script src="assets/js/qr.js"></script>
+</body>
+</html>
