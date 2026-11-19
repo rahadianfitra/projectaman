@@ -14,6 +14,8 @@
     logo: $('#qr-logo'), logoSize: $('#qr-logo-size'), preview: $('#qr-preview'), warn: $('#qr-warn'),
     name: $('#qr-name'),
   };
+  const QUIET_RATIO = 0.08;
+  const MAX_LOGO = 30;
   let logoData = null;
   let qr = null;
   let timer = null;
@@ -31,7 +33,12 @@
     const { text } = normalizedData();
     const useLogo = el.logoOn.checked && !!logoData;
     const size = previewOnly ? 300 : +el.size.value;
-    const margin = Math.round((+el.margin.value) * (size / +el.size.value));
+    // Quiet zone: standar QR butuh area kosong ± 4 modul di sekeliling kode.
+    // Tanpa itu banyak kamera HP gagal mengenali QR. Paksa minimal 8% dari ukuran.
+    const margin = Math.max(
+      Math.round((+el.margin.value) * (size / +el.size.value)),
+      Math.round(size * QUIET_RATIO),
+    );
     const cornerDot = el.corner.value === 'square' ? 'square' : 'dot';
     return {
       width: size,
@@ -45,7 +52,7 @@
       cornersSquareOptions: { color: el.cornerColor.value, type: el.corner.value },
       cornersDotOptions: { color: el.cornerColor.value, type: cornerDot },
       backgroundOptions: { color: el.transparent.checked ? 'rgba(0,0,0,0)' : el.bg.value },
-      imageOptions: { crossOrigin: 'anonymous', margin: 6, imageSize: (+el.logoSize.value) / 100, hideBackgroundDots: true },
+      imageOptions: { crossOrigin: 'anonymous', margin: 4, imageSize: Math.min(+el.logoSize.value, MAX_LOGO) / 100, hideBackgroundDots: true },
     };
   }
 
@@ -59,13 +66,48 @@
   }
   const schedule = () => { clearTimeout(timer); timer = setTimeout(render, 150); };
 
+  // Masalah yang membuat QR gagal di-scan (bukan sekadar saran).
+  function problems() {
+    const out = [];
+    const fgL = lum(el.fg.value), cornerL = lum(el.cornerColor.value), bgL = lum(el.bg.value);
+    if (el.transparent.checked) {
+      // Latar transparan biasanya ditempel di atas putih: titik QR wajib gelap.
+      if (fgL > 0.4 || cornerL > 0.4) out.push('Latar transparan butuh warna QR & sudut yang gelap.');
+    } else {
+      if (fgL > bgL || cornerL > bgL) out.push('Warna terbalik: QR terang di latar gelap tidak bisa dibaca banyak kamera HP.');
+      else if (contrast(el.fg.value, el.bg.value) < 4 || contrast(el.cornerColor.value, el.bg.value) < 4) out.push('Kontras warna QR dan latar terlalu rendah.');
+    }
+    return out;
+  }
+
+  function fixColors() {
+    const darkest = (a, b) => (lum(a) <= lum(b) ? a : b);
+    let fg = el.fg.value, bg = el.bg.value;
+    if (lum(fg) > lum(bg)) [fg, bg] = [bg, fg];           // tukar warna terbalik
+    if (el.transparent.checked || contrast(fg, bg) < 4) { fg = darkest(fg, '#111111'); bg = '#ffffff'; }
+    el.fg.value = fg;
+    el.bg.value = bg;
+    if (lum(el.cornerColor.value) > lum(bg) || contrast(el.cornerColor.value, bg) < 4) el.cornerColor.value = fg;
+    render();
+    toast('Warna QR diperbaiki: titik gelap di latar terang.');
+  }
+
   function checkWarnings() {
-    const msgs = [];
-    if (!el.transparent.checked && contrast(el.fg.value, el.bg.value) < 3) msgs.push('Kontras warna QR dan latar terlalu rendah — bisa sulit di-scan.');
-    if (lum(el.fg.value) > lum(el.bg.value) && !el.transparent.checked) msgs.push('QR terang di latar gelap tidak didukung sebagian scanner.');
-    if (el.logoOn.checked && logoData && +el.logoSize.value > 35) msgs.push('Logo besar bisa membuat QR gagal dibaca. Disarankan ≤ 35%.');
-    el.warn.hidden = !msgs.length;
-    el.warn.textContent = msgs.join(' ');
+    const errs = problems();
+    const tips = [];
+    if (el.logoOn.checked && logoData && +el.logoSize.value > MAX_LOGO) tips.push(`Ukuran logo dibatasi ${MAX_LOGO}% agar QR tetap terbaca.`);
+    el.warn.replaceChildren();
+    el.warn.hidden = !errs.length && !tips.length;
+    if (errs.length) {
+      el.warn.append(errs.join(' ') + ' ');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn ghost sm';
+      b.textContent = 'Perbaiki otomatis';
+      b.addEventListener('click', fixColors);
+      el.warn.append(b);
+    }
+    if (tips.length) el.warn.append(' ' + tips.join(' '));
   }
   function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
   function lum(h) {
@@ -94,6 +136,8 @@
   $$('[data-ext]', $('#view-qr')).forEach((b) => b.addEventListener('click', async () => {
     const { text } = normalizedData();
     if (!text) return toast('Masukkan link atau teks dulu.', 'error');
+    const errs = problems();
+    if (errs.length) return toast(errs[0] + ' Klik "Perbaiki otomatis" dulu.', 'error');
     if (el.logoOn.checked && !logoData) toast('Logo belum dipilih — QR diunduh tanpa logo.');
     const ext = b.dataset.ext;
     const opts = options(false);
