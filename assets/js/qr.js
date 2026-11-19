@@ -20,13 +20,32 @@
   let qr = null;
   let timer = null;
 
+  // Rapikan input jadi link yang benar-benar bisa dibuka HP.
   function normalizedData() {
-    const raw = el.data.value.trim();
-    if (!raw || raw === 'https://' || raw === 'http://') return { text: '', note: 'Masukkan link atau teks.' };
-    if (/^[\w-]+(\.[\w-]+)+([/?#].*)?$/i.test(raw) && !/^[a-z]+:/i.test(raw)) {
-      return { text: 'https://' + raw, note: 'https:// ditambahkan otomatis.' };
+    let raw = el.data.value.trim().replace(/[​-‍﻿]/g, '');
+    if (!raw || /^https?:\/*$/i.test(raw)) return { text: '', note: 'Masukkan link atau teks.' };
+
+    // Isi bawaan "https://" + link yang ditempel = "https://https://...". Ambil skema terakhir saja.
+    const dup = raw.match(/^(?:https?:\/*)+(https?:\/\/.*)$/i);
+    if (dup) raw = dup[1];
+    raw = raw.replace(/^(https?):\/*(?=[^/])/i, '$1://');   // "https:/x" / "https:x" -> "https://x"
+
+    const looksLikeDomain = /^(www\.)?[\w-]+(\.[\w-]+)+(:\d+)?([/?#].*)?$/i.test(raw);
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(raw)) {
+      if (!looksLikeDomain) return { text: raw, note: 'Ini akan jadi QR berisi teks biasa, bukan link.' };
+      raw = 'https://' + raw;
     }
-    return { text: raw, note: '' };
+    if (!/^https?:/i.test(raw)) return { text: raw, note: '' };       // mailto:, tel:, WIFI:, dll
+
+    let u;
+    try { u = new URL(raw); } catch { return { text: raw, note: '', error: 'Link tidak valid. Periksa penulisannya.' }; }
+    const host = u.hostname;
+    if (/\s/.test(raw)) return { text: raw, note: '', error: 'Link mengandung spasi.' };
+    if (host === 'localhost' || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.)/.test(host) || host.endsWith('.local')) {
+      return { text: u.href, note: '', error: `"${host}" hanya bisa dibuka di komputer/jaringan ini, bukan dari HP lain. Pakai link situs yang sudah online.` };
+    }
+    if (!host.includes('.')) return { text: u.href, note: '', error: `Alamat "${host}" bukan domain yang valid (contoh benar: www.contoh.com).` };
+    return { text: u.href, note: '' };
   }
 
   function options(previewOnly) {
@@ -57,8 +76,11 @@
   }
 
   function render() {
-    const { note } = normalizedData();
-    el.hint.textContent = note;
+    const { text, note, error } = normalizedData();
+    // Tampilkan persis isi QR supaya bisa dicek sebelum diunduh.
+    el.hint.textContent = text ? `Isi QR: ${text}` + (note ? ` — ${note}` : '') : note;
+    el.hint.classList.toggle('warn', !!error);
+    if (error) el.hint.textContent += ` ⚠ ${error}`;
     el.preview.innerHTML = '';
     qr = new QRCodeStyling(options(true));
     qr.append(el.preview);
@@ -134,8 +156,9 @@
   });
 
   $$('[data-ext]', $('#view-qr')).forEach((b) => b.addEventListener('click', async () => {
-    const { text } = normalizedData();
+    const { text, error } = normalizedData();
     if (!text) return toast('Masukkan link atau teks dulu.', 'error');
+    if (error) return toast(error, 'error');
     const errs = problems();
     if (errs.length) return toast(errs[0] + ' Klik "Perbaiki otomatis" dulu.', 'error');
     if (el.logoOn.checked && !logoData) toast('Logo belum dipilih — QR diunduh tanpa logo.');
