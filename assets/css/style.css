@@ -42,6 +42,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .sidebar-inner { display: flex; flex-direction: column; gap: 20px; padding: 20px 14px; min-height: 100%; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; padding: 0 8px; }
 .brand b { color: var(--brand); }
+.brand-logo { display: block; width: auto; height: 72px; max-width: 100%; }
 .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .nav-label { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #9ca3af; padding: 0 12px 4px; }
 .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-weight: 500; color: #374151; font-size: .95rem; }
@@ -59,6 +60,7 @@ body { padding-left: var(--sidebar-w); }
     background: rgba(255, 255, 255, .95); backdrop-filter: blur(10px); }
   .sidebar-inner { flex-direction: row; align-items: center; height: 64px; padding: 0 16px; min-height: 0; }
   .brand { padding: 0; }
+  .brand-logo { height: 44px; }
   .nav-toggle { display: block; }
   .nav { display: none; position: absolute; top: 64px; left: 0; right: 0; background: #fff; padding: 8px 16px 16px;
     border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
