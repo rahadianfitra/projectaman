@@ -1,0 +1,8 @@
+{
+  "name": "pdfaman",
+  "private": true,
+  "description": "Alat PDF & gambar yang diproses 100% di browser. package.json ini hanya untuk Netlify Function penghitung pengunjung.",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.9"
+  }
+}

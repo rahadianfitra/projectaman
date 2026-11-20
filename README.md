@@ -1,70 +1,74 @@
 # PDFAman
 
-Alat PDF & QR code pribadi: **Gabung PDF, Pisah PDF, PDF ke JPG/PNG, Tanda Tangan PDF, dan QR Code (dengan/tanpa logo)**.
+**Your Files. Your Device. Your Privacy.**
 
-Semua proses berjalan **di browser pengguna** (client-side). File tidak pernah diupload ke server mana pun, termasuk Netlify. Netlify cuma mengirim file HTML/CSS/JS-nya.
+Alat PDF, gambar & QR code pribadi: **Gabung PDF, Pisah PDF, PDF ke JPG/PNG, Kompres PDF, Kompres Gambar, Tanda Tangan PDF, QR Code**, plus **Statistik pengunjung** anonim.
+
+Dokumen kamu diproses langsung di browser. Kami tidak mengupload, menyimpan, atau membaca file pribadimu. Netlify hanya mengirim file HTML/CSS/JS-nya.
+
+## Fitur
+
+| Tool | Keterangan |
+|---|---|
+| Kompres PDF | Slider tingkat kompresi 10–90%. Mode **pintar** (default): hanya gambar di dalam PDF yang dikompres ulang (JPEG, diperkecil ke DPI target) + stream tak terkompresi di-Flate; teks, font & vektor tidak disentuh sehingga **tetap bisa dicari**. Mode **jadikan gambar** untuk PDF hasil scan. Hasil tidak pernah lebih besar dari file asli. |
+| JPG/PNG ke PDF | JPG, PNG, WebP → satu PDF. Atur urutan (seret), putar per gambar, ukuran halaman (A4, F4, Letter, Legal, sesuai gambar), orientasi, margin, dan kualitas (asli/seimbang/kecil). Orientasi EXIF foto HP otomatis diperbaiki. |
+| Tema | Otomatis (ikut sistem) / Terang / Gelap, disimpan di perangkat. |
+| Kompres Gambar | JPG/PNG/WebP, banyak file sekaligus. Slider kompresi 10–90%, pilihan format hasil & ukuran maksimum. Bila hasil malah lebih besar, file asli dipakai. |
+| Semua tool | Progress bar + persen, tombol **Batal** (atau tombol Esc), ukuran file awal → akhir. |
+| Pratinjau | Kompres PDF & gambar: pembanding geser asli ↔ hasil sebelum diunduh (PDF bisa per halaman & zoom 200%). |
+| Statistik | Pengunjung harian (30 hari), bulanan (12 bulan), total, page view; tabel & unduh CSV. |
 
 ## Struktur folder
 
 ```
 pdfaman/
-├── index.html            # Halaman utama + semua tampilan tool
-├── netlify.toml          # Konfigurasi Netlify + header keamanan (CSP, dll)
-├── assets/
-│   ├── css/style.css
-│   ├── img/favicon.svg
-│   └── js/
-│       ├── app.js        # Utilitas bersama + router menu
-│       ├── merge.js      # Gabung PDF
-│       ├── split.js      # Pisah PDF
-│       ├── pdf2img.js    # PDF ke JPG/PNG
-│       ├── sign.js       # Tanda tangan PDF
-│       └── qr.js         # QR code generator
+├── index.html                 # Halaman utama + semua tampilan tool
+├── netlify.toml               # Konfigurasi Netlify + header keamanan (CSP)
+├── package.json               # Hanya dependency Netlify Function (@netlify/blobs)
+├── netlify/functions/
+│   └── visits.mjs             # Penghitung pengunjung anonim (/api/hit, /api/stats)
+└── assets/
+    ├── css/style.css
+    ├── fonts/                 # Font Google (OFL) di-self-host
+    ├── vendor/                # Library di-self-host (lihat di bawah)
+    ├── img/
+    └── js/
+        ├── theme.js           # Tema terang/gelap (dimuat di <head>)
+        ├── app.js             # Utilitas bersama, progress/batal, pembanding, router
+        ├── img2pdf.js         # JPG/PNG ke PDF
+        ├── merge.js  split.js  pdf2img.js  sign.js  qr.js
+        ├── compress.js        # Kompres PDF
+        ├── imgcompress.js     # Kompres gambar
+        └── stats.js           # Penghitung kunjungan + halaman Statistik
 ```
 
-Library yang dipakai (dimuat dari CDN jsDelivr, versinya dikunci):
-- pdf-lib 1.17.1: membuat/mengedit PDF (gabung, pisah, tempel tanda tangan)
-- pdf.js 3.11.174: me-render halaman PDF (thumbnail, konversi ke gambar)
-- JSZip 3.10.1: membuat file ZIP
-- qr-code-styling 1.5.0: membuat QR code dengan gaya & logo
+Library (di-self-host di `assets/vendor/`, versi dikunci, checksum tarball npm terverifikasi):
+- pdf-lib 1.17.1, pdf.js 3.11.174 (+ worker, cmaps, standard_fonts), JSZip 3.10.1, qr-code-styling 1.5.0
+
+## Privasi: apa yang keluar dari browser?
+
+- **File: tidak ada.** Semua konversi, kompresi & tanda tangan berjalan di browser.
+- **Pihak ketiga: tidak ada.** Library & font disajikan dari situs sendiri. CSP (`netlify.toml` + `<meta>` di `index.html`) hanya mengizinkan `'self'`, jadi browser **memblokir** koneksi ke domain lain, termasuk bila ada kode yang mencoba.
+- **Statistik:** sekali per buka halaman, browser mengirim `POST /api/hit` ke domain sendiri berisi 3 boolean `{d, m, n}` (kunjungan pertama hari ini / bulan ini / pertama kali, dicatat di `localStorage`). Tanpa cookie (`credentials: 'omit'`), tanpa referrer. Server **hanya menyimpan angka agregat**, tidak menyimpan IP, user-agent, atau ID. Browser dengan *Do Not Track* / *Global Privacy Control* tidak mengirim hit.
+- Cek sendiri: DevTools → Network saat memproses file.
 
 ## Menjalankan di komputer sendiri
 
-Jangan buka `index.html` dengan double-click (`file://`), karena sebagian fitur browser butuh server. Pakai salah satu cara ini:
-
-**Cara 1 – VS Code (paling mudah)**
-1. Install ekstensi **Live Server**.
-2. Buka folder `pdfaman`, klik kanan `index.html` → **Open with Live Server**.
-
-**Cara 2 – Terminal**
-```bash
-cd pdfaman
-npx serve .          # atau: python -m http.server 8080
-```
-Lalu buka `http://localhost:3000` (atau `:8080`).
+Jangan buka `index.html` dengan double-click (`file://`). Pakai **Live Server** (VS Code) atau `npx serve .` / `python -m http.server 8080`.
+Di localhost semua tool berjalan normal; halaman Statistik menampilkan pesan karena Netlify Function tidak ikut jalan (pakai `netlify dev` bila ingin mencobanya).
 
 ## Deploy ke Netlify
 
-**Cara cepat (drag & drop):**
-1. Buka https://app.netlify.com/drop
-2. Seret folder `pdfaman` ke halaman tersebut. Selesai, kamu langsung dapat URL.
-
-**Cara rekomendasi (lewat GitHub, auto-deploy tiap update):**
-1. Upload folder ini ke repository GitHub.
-2. Di Netlify: **Add new site → Import an existing project → GitHub** → pilih repo.
-3. Build command: *(kosongkan)*, Publish directory: `.`
-4. Deploy. Setiap kamu `git push`, situs otomatis ter-update.
-
-## Catatan keamanan
-
-- File diproses 100% di browser. Bisa dicek: buka DevTools → tab Network saat memproses file, tidak ada upload.
-- `netlify.toml` memasang Content-Security-Policy ketat: script hanya boleh dari situs sendiri dan jsDelivr, halaman tidak bisa di-iframe, dan form tidak bisa mengirim data keluar.
-- **Opsional, lebih aman lagi (self-host library):** download keempat file library di `index.html` ke folder `assets/vendor/`, ganti `src`-nya ke path lokal, lalu hapus `https://cdn.jsdelivr.net` dari CSP. Untuk pdf.js, salin juga `pdf.worker.min.js`, folder `cmaps/`, dan `standard_fonts/`, lalu ubah `PDFJS_BASE` di `assets/js/app.js`. Dengan begitu situs tidak bergantung pada pihak ketiga sama sekali.
-- Font tampilan diambil dari Google Fonts. Kalau tidak ingin ada request ke Google, self-host font-nya juga.
+Gunakan **Import dari GitHub** (bukan drag & drop) supaya Netlify memasang dependency `@netlify/blobs` dan mem-bundle function.
+1. **Add new site → Import an existing project → GitHub** → pilih repo.
+2. Build command: *(kosongkan)*, Publish directory: `.`, Functions directory terbaca otomatis dari `netlify.toml`.
+3. Deploy. Netlify Blobs aktif otomatis, tidak perlu setting tambahan.
 
 ## Keterbatasan
 
 - PDF yang dilindungi password harus dibuka kuncinya dulu.
-- Tanda tangan di sini berupa **gambar tanda tangan** (seperti Smallpdf versi standar), bukan *digital signature* bersertifikat (PKI).
-- File sangat besar (ratusan MB) bergantung pada RAM perangkat pengguna. Batas di aplikasi 200 MB per file (`MAX_FILE_MB` di `app.js`).
-# projectaman
+- Kompres PDF mode pintar hanya memperkecil **gambar**. PDF yang isinya teks/vektor saja biasanya sudah optimal dan dikembalikan apa adanya. Gambar JPEG 2000, JBIG2, CCITT, CMYK, atau berpalet (Indexed) dilewati.
+- Mode "jadikan gambar" mengubah halaman menjadi gambar: teks tidak bisa dicari lagi.
+- Penghitung pengunjung tidak atomik: pada lonjakan trafik yang sangat padat sebagian kecil hit bisa terlewat. "Pengunjung unik" berbasis `localStorage`, jadi ganti browser/hapus data situs dihitung sebagai pengunjung baru.
+- Tanda tangan berupa **gambar tanda tangan**, bukan *digital signature* bersertifikat (PKI).
+- Batas 200 MB per file (`MAX_FILE_MB` di `app.js`); file besar bergantung pada RAM perangkat.

@@ -156,30 +156,37 @@
       return toast(e.message, 'error');
     }
 
-    loading(true, 'Memisahkan PDF…');
+    const task = App.startTask('Memisahkan PDF…');
     try {
       const src = await loadPdfLib(st.buf);
       const outputs = [];
       for (let k = 0; k < groups.length; k++) {
-        loading(true, `Membuat file ${k + 1}/${groups.length}…`);
+        task.check();
+        task.progress(k / (groups.length + 1), `Membuat file ${k + 1}/${groups.length}…`);
+        await App.tick();
         const out = await PDFLib.PDFDocument.create();
         const pages = await out.copyPages(src, groups[k].idx);
         pages.forEach((p) => out.addPage(p));
         outputs.push({ name: groups[k].name, bytes: await out.save() });
       }
+      task.check();
       if (outputs.length === 1) {
         downloadBlob(pdfBlob(outputs[0].bytes), outputs[0].name);
       } else {
-        loading(true, 'Membuat file ZIP…');
+        task.progress(groups.length / (groups.length + 1), 'Membuat file ZIP…');
         const zip = new JSZip();
         outputs.forEach((o) => zip.file(o.name, o.bytes));
-        downloadBlob(await zip.generateAsync({ type: 'blob' }), `${base}-split.zip`);
+        const blob = await zip.generateAsync({ type: 'blob' });
+        task.check();
+        downloadBlob(blob, `${base}-split.zip`);
       }
-      toast(`Berhasil! ${outputs.length} file dibuat.`, 'success');
+      const total = outputs.reduce((s, o) => s + o.bytes.length, 0);
+      toast(`Berhasil! ${outputs.length} file dibuat (${App.formatBytes(st.file.size)} → total ${App.formatBytes(total)}).`, 'success');
     } catch (e) {
-      toast(e.message || 'Gagal memisahkan PDF.', 'error');
+      if (App.isCancel(e)) toast('Pemisahan dibatalkan.');
+      else toast(e.message || 'Gagal memisahkan PDF.', 'error');
     } finally {
-      loading(false);
+      task.end();
     }
   }
 })();

@@ -79,10 +79,13 @@
 
     clearResults();
     const base = sanitize(baseName(st.file.name));
+    const task = App.startTask('Mengonversi…');
     try {
       for (let k = 0; k < pages.length; k++) {
         const p = pages[k];
-        loading(true, `Mengonversi halaman ${p} (${k + 1}/${pages.length})…`);
+        task.check();
+        task.progress(k / pages.length, `Mengonversi halaman ${p} (${k + 1}/${pages.length})…`);
+        await App.tick();
         const canvas = await renderPage(st.pdf, p, { scale });
         const blob = await new Promise((res) => canvas.toBlob(res, mime, q));
         const { width, height } = canvas;
@@ -93,13 +96,18 @@
         appendCard(r, st.results.length - 1);
       }
       resultsWrap.hidden = false;
-      $('#img-results-info').textContent = `${st.results.length} gambar ${ext.toUpperCase()} siap diunduh`;
-      toast('Konversi selesai!', 'success');
+      const total = st.results.reduce((s, r) => s + r.blob.size, 0);
+      $('#img-results-info').textContent = `${st.results.length} gambar ${ext.toUpperCase()} siap diunduh · PDF ${App.formatBytes(st.file.size)} → total ${App.formatBytes(total)}`;
+      toast('Konversi selesai! Cek pratinjau di bawah sebelum mengunduh.', 'success');
     } catch (e) {
-      toast(e.message || 'Gagal mengonversi.', 'error');
-      if (st.results.length) resultsWrap.hidden = false;
+      if (App.isCancel(e)) toast(`Dibatalkan. ${st.results.length} halaman sempat dikonversi.`);
+      else toast(e.message || 'Gagal mengonversi.', 'error');
+      if (st.results.length) {
+        resultsWrap.hidden = false;
+        $('#img-results-info').textContent = `${st.results.length} gambar ${ext.toUpperCase()} siap diunduh`;
+      }
     } finally {
-      loading(false);
+      task.end();
     }
   }
 

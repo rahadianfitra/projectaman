@@ -6,11 +6,12 @@ window.App = (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/';
+  // Semua library di-self-host (assets/vendor) supaya tidak ada request ke pihak ketiga.
+  const PDFJS_BASE = new URL('assets/vendor/pdfjs/', document.baseURI).href;
   const MAX_FILE_MB = 200;
 
   if (window.pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'build/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'pdf.worker.min.js';
   }
 
   /* ---------- helpers ---------- */
@@ -48,7 +49,54 @@ window.App = (() => {
   function loading(on, text = 'Memproses…') {
     $('#loading').hidden = !on;
     $('#loading-text').textContent = text;
+    $('#loading-progress').hidden = true;
+    $('#loading-cancel').hidden = true;
   }
+
+  /* ---------- tugas berprogres + tombol Batal ----------
+   * const t = startTask('Mengompres…');
+   * for (...) { t.check(); ...; t.progress(i / n, 'Halaman 2/10'); await tick(); }
+   * t.end();
+   * t.check() melempar CancelledError bila pengguna menekan Batal. */
+  class CancelledError extends Error {
+    constructor() { super('Dibatalkan.'); this.name = 'CancelledError'; }
+  }
+  const isCancel = (e) => e && e.name === 'CancelledError';
+  const tick = () => new Promise((r) => setTimeout(r, 0)); // beri kesempatan UI (klik Batal) diproses
+
+  let activeTask = null;
+  function startTask(text = 'Memproses…', { cancellable = true } = {}) {
+    const task = {
+      cancelled: false,
+      check() { if (task.cancelled) throw new CancelledError(); },
+      progress(frac, label) {
+        if (task.cancelled) return;
+        const pct = Math.round(clamp(frac, 0, 1) * 100);
+        $('#loading-bar').style.width = pct + '%';
+        $('#loading-pct').textContent = pct + '%';
+        $('#loading-progress').setAttribute('aria-valuenow', String(pct));
+        if (label) $('#loading-text').textContent = label;
+      },
+      end() { if (activeTask === task) { activeTask = null; $('#loading').hidden = true; } },
+    };
+    activeTask = task;
+    $('#loading').hidden = false;
+    $('#loading-text').textContent = text;
+    $('#loading-progress').hidden = false;
+    $('#loading-cancel').hidden = !cancellable;
+    $('#loading-cancel').disabled = false;
+    task.progress(0);
+    return task;
+  }
+  function cancelActive() {
+    if (!activeTask) return;
+    activeTask.cancelled = true;
+    $('#loading-text').textContent = 'Membatalkan…';
+    $('#loading-cancel').disabled = true;
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeTask && !$('#loading-cancel').hidden) cancelActive();
+  });
 
   // Cegah browser membuka file yang tidak sengaja dijatuhkan di luar dropzone
   ['dragover', 'drop'].forEach((ev) => window.addEventListener(ev, (e) => e.preventDefault()));
@@ -157,21 +205,50 @@ window.App = (() => {
     return out;
   }
 
+  /* Pembanding sebelum/sesudah: elemen .cmp berisi slot [data-slot=before|after] dan input.cmp-range */
+  function bindCompare(root) {
+    const range = root.querySelector('.cmp-range');
+    const slot = (n) => root.querySelector(`[data-slot="${n}"]`);
+    const setPos = () => root.style.setProperty('--pos', range.value + '%');
+    range.addEventListener('input', setPos);
+    setPos();
+    return {
+      set(beforeEl, afterEl) {
+        slot('before').replaceChildren(beforeEl);
+        slot('after').replaceChildren(afterEl);
+      },
+      clear() { slot('before').replaceChildren(); slot('after').replaceChildren(); },
+    };
+  }
+
+  const canvasToBlob = (canvas, mime, q) => new Promise((res) => canvas.toBlob(res, mime, q));
+
+  /* Teks "1,2 MB → 480 KB (−61%)" */
+  /* Persen penghematan; tidak pernah tampil 100% selama hasilnya masih punya isi */
+  const savedPct = (before, after) => (before ? Math.min(Math.round((1 - after / before) * 100), after > 0 ? 99 : 100) : 0);
+
+  function savingText(before, after) {
+    const pct = savedPct(before, after);
+    const sign = pct > 0 ? '−' : '+';
+    return `${formatBytes(before)} → ${formatBytes(after)} (${pct === 0 ? '0' : sign + Math.abs(pct)}%)`;
+  }
+
   function libsReady(names) {
     const missing = names.filter((n) => !window[n]);
     if (missing.length) {
-      toast('Library gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.', 'error');
+      toast('Library gagal dimuat. Muat ulang halaman.', 'error');
       return false;
     }
     return true;
   }
 
   /* ---------- router ---------- */
-  const views = ['home', 'merge', 'split', 'pdf2img', 'sign', 'qr'];
+  const views = ['home', 'merge', 'split', 'pdf2img', 'img2pdf', 'compress', 'imgcompress', 'sign', 'qr', 'stats'];
   function route() {
     const h = (location.hash || '#home').slice(1);
     const v = views.includes(h) ? h : 'home';
     views.forEach((n) => { const el = $('#view-' + n); if (el) el.hidden = n !== v; });
+    document.body.dataset.view = v; // dipakai CSS (mis. beranda ringkas satu layar)
     $$('[data-nav]').forEach((a) => a.classList.toggle('active', a.dataset.nav === v));
     $('#nav').classList.remove('open');
     $('#nav-toggle').setAttribute('aria-expanded', 'false');
@@ -181,6 +258,7 @@ window.App = (() => {
   window.addEventListener('hashchange', route);
   document.addEventListener('DOMContentLoaded', () => {
     $('#year').textContent = new Date().getFullYear();
+    $('#loading-cancel').addEventListener('click', cancelActive);
     $('#nav-toggle').addEventListener('click', () => {
       const open = $('#nav').classList.toggle('open');
       $('#nav-toggle').setAttribute('aria-expanded', String(open));
@@ -191,6 +269,6 @@ window.App = (() => {
   return {
     $, $$, clamp, formatBytes, baseName, sanitize, isPdf, downloadBlob, pdfBlob, toast, loading,
     setupDropzone, parseRanges, rangesToIndices, compressPages, openPdfJs, renderPage, loadPdfLib,
-    dataUrlToBytes, libsReady,
+    dataUrlToBytes, libsReady, startTask, isCancel, tick, canvasToBlob, savingText, savedPct, bindCompare,
   };
 })();

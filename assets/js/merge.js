@@ -117,22 +117,30 @@
 
   async function run() {
     if (items.length < 2) return toast('Pilih minimal 2 file PDF untuk digabung.', 'error');
-    loading(true, 'Menggabungkan PDF…');
+    const task = App.startTask('Menggabungkan PDF…');
     try {
       const out = await PDFLib.PDFDocument.create();
       for (let k = 0; k < items.length; k++) {
-        loading(true, `Menggabungkan file ${k + 1}/${items.length}…`);
+        task.check();
+        task.progress(k / (items.length + 1), `Menggabungkan file ${k + 1}/${items.length}…`);
+        await App.tick();
         const src = await loadPdfLib(items[k].buf);
         const pages = await out.copyPages(src, src.getPageIndices());
         pages.forEach((p) => out.addPage(p));
       }
+      task.check();
+      task.progress(items.length / (items.length + 1), 'Menyimpan PDF…');
+      await App.tick();
       const bytes = await out.save();
+      task.check();
+      const before = items.reduce((s, it) => s + it.file.size, 0);
       downloadBlob(pdfBlob(bytes), 'gabungan.pdf');
-      toast('Berhasil! File gabungan sedang diunduh.', 'success');
+      toast(`Berhasil! ${App.savingText(before, bytes.length)}. File sedang diunduh.`, 'success');
     } catch (e) {
-      toast(e.message || 'Gagal menggabungkan PDF.', 'error');
+      if (App.isCancel(e)) toast('Penggabungan dibatalkan.');
+      else toast(e.message || 'Gagal menggabungkan PDF.', 'error');
     } finally {
-      loading(false);
+      task.end();
     }
   }
 })();

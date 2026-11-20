@@ -4,16 +4,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Lapisan pengaman kedua (selain header di netlify.toml): browser memblokir koneksi ke domain lain. -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; media-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>PDFAman — Alat PDF &amp; QR yang aman, diproses di perangkatmu</title>
   <meta name="description"
-    content="Gabung, pisah, konversi, dan tanda tangani PDF, serta buat QR code — semua diproses di browser, file tidak pernah diupload.">
+    content="Gabung, pisah, kompres, konversi, dan tanda tangani PDF, kompres gambar, serta buat QR code — semua diproses di browser, file tidak pernah diupload.">
   <meta name="theme-color" content="#4338ca">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Great+Vibes&family=Satisfy&display=swap">
-  <link rel="stylesheet" href="assets/css/style.css?v=3">
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=4">
+  <link rel="stylesheet" href="assets/css/style.css?v=7">
+  <script src="assets/js/theme.js?v=7"></script>
 </head>
 
 <body>
@@ -23,6 +25,11 @@
       <a href="#home" class="brand">
         <img class="brand-logo" src="assets/img/logo.png" alt="Astra Honda Care 1-500-989" width="1080" height="605">
       </a>
+      <label class="theme-switch" title="Ganti mode terang / gelap">
+        <span class="theme-label">Mode gelap</span>
+        <input type="checkbox" id="theme-toggle" role="switch" aria-label="Mode gelap">
+        <span class="ts-track" aria-hidden="true"><span class="ts-knob"></span></span>
+      </label>
       <button class="nav-toggle" id="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
       <nav class="nav" id="nav">
         <span class="nav-label">Menu</span>
@@ -30,9 +37,13 @@
         <a href="#merge" data-nav="merge"><span class="nav-ico">⧉</span>Gabung PDF</a>
         <a href="#split" data-nav="split"><span class="nav-ico">✂</span>Pisah PDF</a>
         <a href="#pdf2img" data-nav="pdf2img"><span class="nav-ico">🖼</span>PDF ke JPG/PNG</a>
+        <a href="#img2pdf" data-nav="img2pdf"><span class="nav-ico">📑</span>JPG/PNG ke PDF</a>
+        <a href="#compress" data-nav="compress"><span class="nav-ico">🗜</span>Kompres PDF</a>
+        <a href="#imgcompress" data-nav="imgcompress"><span class="nav-ico">📷</span>Kompres Gambar</a>
         <a href="#sign" data-nav="sign"><span class="nav-ico">✍</span>Tanda Tangan</a>
         <a href="#qr" data-nav="qr"><span class="nav-ico">▦</span>QR Code</a>
-        <p class="nav-note">🔒 Semua file diproses di perangkatmu.</p>
+        <a href="#stats" data-nav="stats"><span class="nav-ico">📊</span>Statistik</a>
+        <p class="nav-note"><b>Your Files. Your Device. Your Privacy.</b><br>🔒 Semua file diproses di perangkatmu.</p>
       </nav>
     </div>
   </header>
@@ -42,10 +53,9 @@
     <!-- ================= HOME ================= -->
     <section id="view-home" class="view">
       <div class="hero">
-        <span class="badge">🔒 100% diproses di perangkatmu</span>
-        <h1>Semua alat PDF yang kamu butuhkan,<br>tanpa upload ke server.</h1>
-        <p>File kamu tidak pernah meninggalkan browser. Tidak ada server, tidak ada penyimpanan, tidak ada yang bisa
-          membaca dokumenmu.</p>
+        <span class="badge">🔒 Your Files. Your Device. Your Privacy.</span>
+        <h1>Semua alat PDF yang kamu butuhkan,<br> tanpa upload ke server.</h1>
+        <p>Dokumen kamu diproses langsung di browser. Kami tidak mengupload, menyimpan, atau membaca file pribadimu.</p>
       </div>
       <div class="tool-grid">
         <a class="tool-card" href="#merge">
@@ -63,6 +73,21 @@
           <h3>PDF ke JPG/PNG</h3>
           <p>Ubah setiap halaman PDF menjadi gambar berkualitas tinggi.</p>
         </a>
+        <a class="tool-card" href="#img2pdf">
+          <span class="tool-icon c8">📑</span>
+          <h3>JPG/PNG ke PDF</h3>
+          <p>Gabungkan foto atau gambar jadi satu PDF, atur urutan &amp; ukuran halaman.</p>
+        </a>
+        <a class="tool-card" href="#compress">
+          <span class="tool-icon c6">🗜</span>
+          <h3>Kompres PDF</h3>
+          <p>Perkecil ukuran PDF, atur sendiri tingkat kompresinya dalam persen.</p>
+        </a>
+        <a class="tool-card" href="#imgcompress">
+          <span class="tool-icon c7">📷</span>
+          <h3>Kompres Gambar</h3>
+          <p>Perkecil JPG, PNG, dan WebP sekaligus, bandingkan sebelum &amp; sesudah.</p>
+        </a>
         <a class="tool-card" href="#sign">
           <span class="tool-icon c4">✍</span>
           <h3>Tanda Tangan PDF</h3>
@@ -73,6 +98,19 @@
           <h3>Buat QR Code</h3>
           <p>QR dari link, bisa custom warna, gaya, dan logo di tengahnya.</p>
         </a>
+      </div>
+
+      <div class="privacy" aria-label="Privasi">
+        <div class="privacy-grid">
+          <div><b>📂 File tidak pernah diupload</b>
+            <p>Semua proses berjalan di browser kamu, tidak ada file yang dikirim ke server.</p></div>
+          <div><b>🧱 Tanpa pihak ketiga</b>
+            <p>Library &amp; font dari situs ini sendiri. Koneksi ke domain lain diblokir (CSP).</p></div>
+          <div><b>📊 Statistik tanpa jejak</b>
+            <p>Hanya menghitung kunjungan. Tanpa cookie, IP, atau data file. DNT/GPC dihormati.</p></div>
+          <div><b>🔍 Bisa kamu cek sendiri</b>
+            <p>Buka DevTools → <i>Network</i> saat memproses file: tidak ada upload.</p></div>
+        </div>
       </div>
     </section>
 
@@ -212,6 +250,314 @@
           </div>
           <div class="result-grid" id="img-results"></div>
         </div>
+      </div>
+    </section>
+
+    <!-- ================= IMAGE -> PDF ================= -->
+    <section id="view-img2pdf" class="view" hidden>
+      <div class="tool-head">
+        <h1>JPG / PNG ke PDF</h1>
+        <p>Ubah foto atau gambar menjadi satu file PDF. Atur urutan, putar, pilih ukuran halaman, lalu pratinjau
+          sebelum diunduh.</p>
+      </div>
+      <div class="dropzone" id="i2p-drop" role="button" tabindex="0">
+        <input type="file" id="i2p-input" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" multiple hidden>
+        <div class="dz-icon">📑</div>
+        <strong>Pilih gambar</strong>
+        <span>JPG, PNG, WebP · seret &amp; lepas di sini (bisa banyak sekaligus)</span>
+      </div>
+      <div class="panel" id="i2p-panel" hidden>
+        <div class="panel-head">
+          <strong id="i2p-summary"></strong>
+          <span class="muted small">Seret ⋮⋮ untuk mengubah urutan</span>
+          <span class="spacer"></span>
+          <button class="btn ghost sm" id="i2p-add" type="button">+ Tambah</button>
+          <button class="btn ghost sm" id="i2p-clear" type="button">Hapus semua</button>
+        </div>
+        <ul class="file-list" id="i2p-list"></ul>
+
+        <div class="form-row" style="margin-top:16px">
+          <div class="field">
+            <label for="i2p-size">Ukuran halaman</label>
+            <select id="i2p-size">
+              <option value="a4" selected>A4 (210 × 297 mm)</option>
+              <option value="f4">F4 / Folio (215 × 330 mm)</option>
+              <option value="letter">Letter (216 × 279 mm)</option>
+              <option value="legal">Legal (216 × 356 mm)</option>
+              <option value="fit">Sesuai ukuran gambar</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="i2p-orient">Orientasi</label>
+            <select id="i2p-orient">
+              <option value="auto">Otomatis (ikuti gambar)</option>
+              <option value="portrait">Potret</option>
+              <option value="landscape">Lanskap</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="i2p-margin">Margin</label>
+            <select id="i2p-margin">
+              <option value="0">Tanpa margin</option>
+              <option value="20" selected>Kecil (7 mm)</option>
+              <option value="42">Besar (15 mm)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="i2p-quality">Kualitas gambar</label>
+            <select id="i2p-quality">
+              <option value="original">Asli (tanpa kompresi ulang)</option>
+              <option value="balanced" selected>Seimbang (lebih kecil, tetap tajam)</option>
+              <option value="small">Ukuran kecil (untuk dikirim lewat chat/email)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <span class="spacer"></span>
+          <button class="btn primary" id="i2p-run" type="button">Buat PDF</button>
+        </div>
+
+        <div class="result-box" id="i2p-result" hidden>
+          <div class="size-tiles">
+            <div class="size-tile"><span>Total gambar</span><b id="i2p-before"></b></div>
+            <div class="size-tile"><span>Ukuran PDF</span><b id="i2p-after"></b></div>
+            <div class="size-tile accent"><span>Halaman</span><b id="i2p-pages"></b></div>
+          </div>
+          <div class="panel-head preview-head">
+            <strong>Pratinjau hasil</strong>
+            <span class="muted small" id="i2p-preview-note"></span>
+          </div>
+          <div class="preview-grid" id="i2p-preview"></div>
+          <div class="actions">
+            <span class="muted small">Belum pas? Ubah urutan atau pengaturan lalu klik <b>Buat PDF</b> lagi.</span>
+            <span class="spacer"></span>
+            <button class="btn primary" id="i2p-download" type="button">⬇ Unduh PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= COMPRESS PDF ================= -->
+    <section id="view-compress" class="view" hidden>
+      <div class="tool-head">
+        <h1>Kompres PDF</h1>
+        <p>Perkecil ukuran file PDF. Atur tingkat kompresinya, lihat pratinjau hasil, baru unduh.</p>
+      </div>
+      <div class="dropzone" id="cpdf-drop" role="button" tabindex="0">
+        <input type="file" id="cpdf-input" accept="application/pdf,.pdf" hidden>
+        <div class="dz-icon">🗜</div>
+        <strong>Pilih file PDF</strong>
+        <span>atau seret &amp; lepas di sini</span>
+      </div>
+      <div class="panel" id="cpdf-panel" hidden>
+        <div class="panel-head">
+          <strong id="cpdf-info"></strong>
+          <span class="spacer"></span>
+          <button class="btn ghost sm" id="cpdf-reset" type="button">Ganti file</button>
+        </div>
+
+        <div class="mode-grid" role="radiogroup">
+          <label class="mode-card"><input type="radio" name="cpdf-mode" value="smart" checked>
+            <span><b>Kompres pintar (disarankan)</b><small>Gambar di dalam PDF dikompres. Teks, font &amp; vektor
+                tetap utuh, jadi tetap bisa dicari &amp; diseleksi.</small></span></label>
+          <label class="mode-card"><input type="radio" name="cpdf-mode" value="raster">
+            <span><b>Jadikan gambar</b><small>Khusus PDF hasil scan. Halaman diubah jadi gambar, teks tidak bisa
+                dicari.</small></span></label>
+        </div>
+
+        <div id="cpdf-level-wrap">
+          <div class="field">
+            <label for="cpdf-level">Tingkat kompresi: <span id="cpdf-level-val">50</span>%</label>
+            <input type="range" id="cpdf-level" min="10" max="90" step="5" value="50">
+            <div class="range-scale"><span>10% · kualitas terbaik</span><span>90% · file terkecil</span></div>
+          </div>
+          <div class="presets">
+            <button type="button" class="chip" data-level="25">Rendah 25%</button>
+            <button type="button" class="chip" data-level="50">Sedang 50%</button>
+            <button type="button" class="chip" data-level="75">Tinggi 75%</button>
+          </div>
+          <p class="small muted" id="cpdf-level-hint"></p>
+        </div>
+
+        <div class="actions">
+          <span class="spacer"></span>
+          <button class="btn primary" id="cpdf-run" type="button">Kompres PDF</button>
+        </div>
+
+        <div class="result-box" id="cpdf-result" hidden>
+          <div class="size-tiles">
+            <div class="size-tile"><span>Ukuran awal</span><b id="cpdf-before"></b></div>
+            <div class="size-tile"><span>Ukuran akhir</span><b id="cpdf-after"></b></div>
+            <div class="size-tile accent"><span>Hemat</span><b id="cpdf-saved"></b></div>
+          </div>
+          <div class="size-bars" aria-hidden="true">
+            <div class="size-bar"><span>Awal</span><i style="width:100%"></i></div>
+            <div class="size-bar after"><span>Akhir</span><i id="cpdf-bar-after"></i></div>
+          </div>
+          <p class="small muted" id="cpdf-note"></p>
+          <p class="warn small" id="cpdf-warn" hidden></p>
+
+          <div class="panel-head preview-head">
+            <strong>Pratinjau hasil</strong>
+            <span class="muted small">Geser garis untuk membandingkan asli ↔ hasil</span>
+            <span class="spacer"></span>
+            <div class="pager">
+              <button class="icon-btn" id="cpdf-prev" type="button" aria-label="Halaman sebelumnya">‹</button>
+              <span id="cpdf-page" class="small"></span>
+              <button class="icon-btn" id="cpdf-next" type="button" aria-label="Halaman berikutnya">›</button>
+            </div>
+            <select id="cpdf-zoom" class="zoom-sel" aria-label="Zoom">
+              <option value="1">Pas layar</option>
+              <option value="2">Zoom 200%</option>
+            </select>
+          </div>
+          <div class="cmp-scroll">
+            <div class="cmp" id="cpdf-cmp">
+              <div class="cmp-after" data-slot="after"></div>
+              <div class="cmp-before" data-slot="before"></div>
+              <div class="cmp-line"></div>
+              <span class="cmp-tag left">Asli</span><span class="cmp-tag right">Hasil</span>
+              <input type="range" class="cmp-range" min="0" max="100" value="50" aria-label="Geser pembanding">
+            </div>
+          </div>
+
+          <div class="actions">
+            <span class="muted small">Belum puas? Ubah tingkat kompresi lalu klik <b>Kompres PDF</b> lagi.</span>
+            <span class="spacer"></span>
+            <button class="btn primary" id="cpdf-download" type="button">⬇ Unduh PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= COMPRESS IMAGE ================= -->
+    <section id="view-imgcompress" class="view" hidden>
+      <div class="tool-head">
+        <h1>Kompres Gambar</h1>
+        <p>Perkecil ukuran JPG, PNG, dan WebP. Bisa banyak sekaligus, bandingkan sebelum &amp; sesudah.</p>
+      </div>
+      <div class="dropzone" id="cimg-drop" role="button" tabindex="0">
+        <input type="file" id="cimg-input" accept="image/jpeg,image/png,image/webp,image/bmp,image/gif" multiple
+          hidden>
+        <div class="dz-icon">📷</div>
+        <strong>Pilih gambar</strong>
+        <span>JPG, PNG, WebP · seret &amp; lepas di sini (bisa banyak sekaligus)</span>
+      </div>
+      <div class="panel" id="cimg-panel" hidden>
+        <div class="panel-head">
+          <strong id="cimg-summary"></strong>
+          <span class="spacer"></span>
+          <button class="btn ghost sm" id="cimg-add" type="button">+ Tambah</button>
+          <button class="btn ghost sm" id="cimg-clear" type="button">Hapus semua</button>
+        </div>
+
+        <div class="field">
+          <label for="cimg-level">Tingkat kompresi: <span id="cimg-level-val">50</span>%</label>
+          <input type="range" id="cimg-level" min="10" max="90" step="5" value="50">
+          <div class="range-scale"><span>10% · kualitas terbaik</span><span>90% · file terkecil</span></div>
+        </div>
+        <div class="presets">
+          <button type="button" class="chip" data-level="25">Rendah 25%</button>
+          <button type="button" class="chip" data-level="50">Sedang 50%</button>
+          <button type="button" class="chip" data-level="75">Tinggi 75%</button>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="cimg-format">Format hasil</label>
+            <select id="cimg-format">
+              <option value="auto">Otomatis (JPG tetap JPG, PNG/WebP → WebP)</option>
+              <option value="image/jpeg">JPG</option>
+              <option value="image/webp">WebP</option>
+              <option value="image/png">PNG (hanya efektif bila diperkecil)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cimg-max">Ukuran maksimum (sisi terpanjang)</label>
+            <select id="cimg-max">
+              <option value="0">Tetap (tidak diubah)</option>
+              <option value="3840">3840 px (4K)</option>
+              <option value="2560">2560 px</option>
+              <option value="1920">1920 px (Full HD)</option>
+              <option value="1280">1280 px</option>
+              <option value="800">800 px</option>
+            </select>
+          </div>
+        </div>
+        <p class="small muted" id="cimg-hint"></p>
+
+        <ul class="file-list" id="cimg-list"></ul>
+
+        <div class="actions">
+          <strong class="small" id="cimg-total"></strong>
+          <span class="spacer"></span>
+          <button class="btn ghost" id="cimg-zip" type="button" hidden>⬇ Unduh semua (ZIP)</button>
+          <button class="btn primary" id="cimg-run" type="button">Kompres gambar</button>
+        </div>
+      </div>
+
+      <dialog id="cimg-modal" class="modal wide">
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3 id="cimg-modal-title">Pratinjau</h3>
+            <button class="icon-btn" id="cimg-modal-close" type="button" aria-label="Tutup">✕</button>
+          </div>
+          <p class="small muted">Geser garis untuk membandingkan asli ↔ hasil.</p>
+          <div class="cmp-scroll">
+            <div class="cmp" id="cimg-cmp">
+              <div class="cmp-after" data-slot="after"></div>
+              <div class="cmp-before" data-slot="before"></div>
+              <div class="cmp-line"></div>
+              <span class="cmp-tag left">Asli</span><span class="cmp-tag right">Hasil</span>
+              <input type="range" class="cmp-range" min="0" max="100" value="50" aria-label="Geser pembanding">
+            </div>
+          </div>
+          <div class="modal-foot">
+            <span class="small" id="cimg-modal-info"></span>
+            <span class="spacer"></span>
+            <button class="btn ghost" id="cimg-modal-cancel" type="button">Tutup</button>
+            <button class="btn primary" id="cimg-modal-dl" type="button">⬇ Unduh</button>
+          </div>
+        </div>
+      </dialog>
+    </section>
+
+    <!-- ================= STATS ================= -->
+    <section id="view-stats" class="view" hidden>
+      <div class="tool-head">
+        <h1>Statistik Pengunjung</h1>
+        <p>Jumlah pengunjung anonim PDFAman. Tanpa cookie, tanpa IP, tanpa data file. Zona waktu WIB.</p>
+      </div>
+      <p class="warn small stats-msg" id="stats-msg" hidden></p>
+      <div id="stats-body" hidden>
+        <div class="kpi-grid">
+          <div class="kpi"><span>Pengunjung hari ini</span><b id="k-today-v">–</b><small id="k-today-pv"></small></div>
+          <div class="kpi"><span>Pengunjung bulan ini</span><b id="k-month-v">–</b><small id="k-month-pv"></small></div>
+          <div class="kpi"><span>Total pengunjung</span><b id="k-total-v">–</b><small id="k-total-pv"></small></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <strong>Pengunjung harian · 30 hari terakhir</strong>
+            <span class="spacer"></span>
+            <button class="btn ghost sm" data-csv="days" type="button">⬇ CSV</button>
+          </div>
+          <div class="chart" id="chart-days"></div>
+          <details class="data-table"><summary>Lihat tabel</summary><div id="table-days"></div></details>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <strong>Pengunjung bulanan · 12 bulan terakhir</strong>
+            <span class="spacer"></span>
+            <button class="btn ghost sm" data-csv="months" type="button">⬇ CSV</button>
+          </div>
+          <div class="chart" id="chart-months"></div>
+          <details class="data-table"><summary>Lihat tabel</summary><div id="table-months"></div></details>
+        </div>
+        <p class="small muted">"Pengunjung" = perangkat unik pada periode itu (dihitung sekali per hari / per bulan);
+          "page view" = setiap kali halaman dibuka. Pengguna yang mengaktifkan <i>Do Not Track</i> / <i>GPC</i>
+          tidak dihitung.</p>
       </div>
     </section>
 
@@ -404,8 +750,10 @@
  
   <footer class="footer">
     <div class="container">
-      <p>🔒 PDFAman memproses semua file langsung di browser kamu. Tidak ada file yang dikirim ke server.</p>
-      <p class="muted small">© <span id="year"></span> FITTT</p>
+      <p><b>Your Files. Your Device. Your Privacy.</b> <span class="footer-sep">·</span> 🔒 Dokumen kamu diproses
+        langsung di browser. Kami tidak mengupload, menyimpan, atau membaca file pribadimu.</p>
+      <p class="muted small"><span id="visit-line" hidden></span><span class="footer-sep" id="visit-sep"
+          hidden>·</span> © <span id="year"></span> FITTT</p>
     </div>
   </footer>
 
@@ -414,21 +762,31 @@
     <div class="loading-box">
       <div class="spinner"></div>
       <p id="loading-text">Memproses…</p>
+      <div class="progress" id="loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+        aria-valuenow="0" hidden>
+        <div class="progress-track"><div class="progress-bar" id="loading-bar"></div></div>
+        <span id="loading-pct">0%</span>
+      </div>
+      <button class="btn ghost sm" id="loading-cancel" type="button" hidden>✕ Batal</button>
     </div>
   </div>
 
-  <!-- Library (versi dikunci). Lihat README untuk opsi self-host. -->
-  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+  <!-- Library di-self-host di assets/vendor (versi dikunci, checksum npm terverifikasi). Tidak ada CDN. -->
+  <script src="assets/vendor/pdf-lib.min.js"></script>
+  <script src="assets/vendor/pdfjs/pdf.min.js"></script>
+  <script src="assets/vendor/jszip.min.js"></script>
+  <script src="assets/vendor/qr-code-styling.js"></script>
 
-  <script src="assets/js/app.js?v=3"></script>
-  <script src="assets/js/merge.js?v=3"></script>
-  <script src="assets/js/split.js?v=3"></script>
-  <script src="assets/js/pdf2img.js?v=3"></script>
-  <script src="assets/js/sign.js?v=3"></script>
-  <script src="assets/js/qr.js?v=3"></script>
+  <script src="assets/js/app.js?v=7"></script>
+  <script src="assets/js/merge.js?v=4"></script>
+  <script src="assets/js/split.js?v=4"></script>
+  <script src="assets/js/pdf2img.js?v=4"></script>
+  <script src="assets/js/img2pdf.js?v=6"></script>
+  <script src="assets/js/compress.js?v=5"></script>
+  <script src="assets/js/imgcompress.js?v=5"></script>
+  <script src="assets/js/sign.js?v=4"></script>
+  <script src="assets/js/qr.js?v=4"></script>
+  <script src="assets/js/stats.js?v=5"></script>
 </body>
 
 </html>
