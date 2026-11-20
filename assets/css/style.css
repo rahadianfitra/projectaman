@@ -96,7 +96,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
   background: var(--surface); border-right: 1px solid var(--line); overflow-y: auto;
 }
 .sidebar-inner { display: flex; flex-direction: column; gap: 20px; padding: 20px 14px; min-height: 100%; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; padding: 0 8px; }
+.brand { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 1.2rem; padding: 0 8px; }
 .brand b { color: var(--brand-text); }
 .brand-logo { display: block; width: auto; height: 72px; max-width: 100%; }
 .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
